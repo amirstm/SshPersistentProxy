@@ -61,10 +61,19 @@ def commandManagerNewServer():
         sshPortText = input("Input new server's SSH port if it's not the default value (22): ")
         if sshPortText == "":
             sshPortText = "22"
-        sshPort = int(sshPort)
+        sshPort = int(sshPortText)
         server = Server(ip, True, True, sshPort)
+        addMyKeyToServer(server)
     except:
         print("Invalid input, please try again.")
+
+def addMyKeyToServer(server):
+    mySshKey = readLocalSshKey()
+    
+
+def readLocalSshKey():
+    with open(LOCAL_SSH_KEY_FOLDER / "id_rsa.pub", "r") as file:
+        return file.read()
 
 def printConfigServers():
     if len(CONFIGURATION.servers) == 0:
