@@ -1,6 +1,7 @@
-import os, subprocess, json
+import os, subprocess, json, traceback, paramiko
 from pathlib import Path
 from config import Server, Configuration
+from paramiko import SSHClient
 
 global LOCAL_SSH_KEY_FOLDER
 global CONFIGURATION
@@ -16,10 +17,7 @@ def checkSshKey():
         return False
     else:
         print("RSA key was not found. We will build a new one.")
-        if os.name == 'nt':
-            command = f"-f {LOCAL_SSH_KEY_FOLDER}/id_rsa -t rsa -N ''"
-        else:
-            command = f"-f {LOCAL_SSH_KEY_FOLDER}/id_rsa -t rsa -N ''"
+        command = f"-f {LOCAL_SSH_KEY_FOLDER}/id_rsa -t rsa -N \"\""
         result = subprocess.run(["ssh-keygen"] + command.split(' '), stdout=subprocess.PIPE)
         print(result.stdout.decode('utf-8'))
         return True
@@ -57,19 +55,30 @@ def runCommandManager():
 
 def commandManagerNewServer():
     try:
-        ip = input("Input new server's IP: ")
-        sshPortText = input("Input new server's SSH port if it's not the default value (22): ")
+        ip = input("Input the new server's IP: ")
+        sshPortText = input("Input the new server's SSH port if it's not the default value (22): ")
+        username = input("Input the new server's username: ")
+        password = input("Input the password to connect for the first time and add our SSH key: ")
         if sshPortText == "":
             sshPortText = "22"
         sshPort = int(sshPortText)
-        server = Server(ip, True, True, sshPort)
-        addMyKeyToServer(server)
-    except:
+        server = Server(ip, username, True, True, sshPort)
+    except Exception:
         print("Invalid input, please try again.")
+    try:
+        addMyKeyToServer(server, password)
+    except:
+        print("Error while adding our SSH key to the new server, please check the credentials.")
+    CONFIGURATION.servers.append(server)
+    updateConfigFile()
 
-def addMyKeyToServer(server):
+def addMyKeyToServer(server, password):
     mySshKey = readLocalSshKey()
-    
+    client = SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(server.ip, port=server.sshPort, 
+                   username=server.username, password=password)
+    stdin, stdout, stderr = client.exec_command(f'echo -n \"{mySshKey}\" >> .ssh/authorized_keys')
 
 def readLocalSshKey():
     with open(LOCAL_SSH_KEY_FOLDER / "id_rsa.pub", "r") as file:
@@ -80,7 +89,7 @@ def printConfigServers():
         print("Config file has no servers currently.")
     else:
         for i, server in enumerate(CONFIGURATION.servers):
-            print(f"{i}: {server}")
+            print(f"{i+1}: {server}")
 
 if __name__ == "__main__":
     print("Running SshPersistentProxy Admin.")

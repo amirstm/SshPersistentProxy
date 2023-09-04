@@ -1,9 +1,10 @@
 import json
 
 class Server:
-    def __init__(self, ip, hasMyKey, enabled, sshPort=22):
+    def __init__(self, ip, username, hasMyKey, enabled, sshPort=22):
         self.ip = ip
         self.sshPort = sshPort
+        self.username = username
         self.hasMyKey = hasMyKey
         self.enabled = enabled
 
@@ -12,8 +13,12 @@ class Server:
             "ip": self.ip,
             "sshPort": self.sshPort,
             "hasMyKey": self.hasMyKey,
-            "enabled": self.enabled
+            "enabled": self.enabled,
+            "username": self.username
         }
+
+    def __str__(self):
+        return self.ip
 
 class Configuration:
     def __init__(self, proxyPort, servers=[]):
