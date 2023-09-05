@@ -1,4 +1,4 @@
-import os, subprocess, json, traceback, paramiko
+import os, subprocess, json, time, paramiko
 from pathlib import Path
 from config import Server, Configuration
 from paramiko import SSHClient
@@ -17,9 +17,11 @@ def checkSshKey():
         return False
     else:
         print("RSA key was not found. We will build a new one.")
-        command = f"-f {LOCAL_SSH_KEY_FOLDER}/id_rsa -t rsa -N \"\""
-        result = subprocess.run(["ssh-keygen"] + command.split(' '), stdout=subprocess.PIPE)
-        print(result.stdout.decode('utf-8'))
+        command = f"-f {LOCAL_SSH_KEY_FOLDER}/id_rsa -t rsa"
+        p = subprocess.Popen(["ssh-keygen"] + command.split(' '), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        result, errors = p.communicate()
+        # result = subprocess.run(["ssh-keygen"] + command.split(' '), stdout=subprocess.PIPE)
+        print(result)
         return True
 
 def checkConfigFile(keyIsNew):
@@ -48,10 +50,49 @@ def readConfigFile():
 
 def runCommandManager():
     while True:
+        print()
         printConfigServers()
-        command = input("Enter a number to edit a server or input `+` to add a new one:")
+        command = input("Enter a number to edit a server or `+` to add a new one: ")
         if command == "+":
-                commandManagerNewServer()
+            commandManagerNewServer()
+            time.sleep(1)
+        elif command.isdigit():
+            serverInd = int(command) - 1
+            if len(CONFIGURATION.servers) <= serverInd:
+                print("Invalid index was entered. Please try again.")
+            else:
+                commandManageOldServer(CONFIGURATION.servers[serverInd])
+
+def commandManageOldServer(server):
+    while True:
+        print(f'''
+Please choose from the following commands for the server {server.ip}:
+0. Exit to main menu
+1. Run a test connection
+2. Toggle enabled status from {server.enabled} to {not server.enabled}''')
+        command = input("Enter the command number: ")
+        if command == "0":
+            break
+        elif command == "1":
+            try:
+                runTestConnection(server)
+                print(f"Connection to {server.ip} was successful.")
+            except:
+                print(f"Connection to {server.ip} failed.")
+            time.sleep(1)
+        elif command == "2":
+            server.enabled = not server.enabled
+            updateConfigFile()
+        else:
+            print("Invalid command. Please try again.")
+            time.sleep(1)
+
+def runTestConnection(server):
+    client = SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(server.ip, port=server.sshPort, 
+                   username=server.username)
+    client.exec_command(f'ls -a')
 
 def commandManagerNewServer():
     try:
