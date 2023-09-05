@@ -6,6 +6,7 @@ from getpass import getpass
 
 global LOCAL_SSH_KEY_FOLDER
 global CONFIGURATION
+CONFIG_FILE_FOLDER = "../config/"
 CONFIG_FILE_NAME = "private_config.json"
 
 def findLocalSshKeyFolder():
@@ -26,7 +27,7 @@ def checkSshKey():
 
 def checkConfigFile(keyIsNew):
     global CONFIGURATION
-    if os.path.isfile(CONFIG_FILE_NAME):
+    if os.path.isfile(CONFIG_FILE_FOLDER + CONFIG_FILE_NAME):
         readConfigFile()
         if keyIsNew or True:
             for server in CONFIGURATION.servers:
@@ -34,18 +35,20 @@ def checkConfigFile(keyIsNew):
             updateConfigFile()
         print("Configuration file is processed and ready.")
     else:
+        if not os.path.isdir(CONFIG_FILE_FOLDER):
+            os.mkdir(CONFIG_FILE_FOLDER)
         proxyPort = input("Enter port to use for proxy tunneling: ")
         CONFIGURATION = Configuration(proxyPort=proxyPort)
         updateConfigFile()
         print("Configuration file is initiated and ready.")
 
 def updateConfigFile():
-    with open(CONFIG_FILE_NAME, "w") as file:
+    with open(CONFIG_FILE_FOLDER + CONFIG_FILE_NAME, "w") as file:
         file.write(CONFIGURATION.toJSON())
 
 def readConfigFile():
     global CONFIGURATION
-    with open(CONFIG_FILE_NAME, "r") as file:
+    with open(CONFIG_FILE_FOLDER + CONFIG_FILE_NAME, "r") as file:
         CONFIGURATION = Configuration(**json.loads(file.read()))
 
 def runCommandManager():
