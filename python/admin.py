@@ -2,6 +2,7 @@ import os, subprocess, json, time, paramiko
 from pathlib import Path
 from config import Server, Configuration
 from paramiko import SSHClient
+from getpass import getpass
 
 global LOCAL_SSH_KEY_FOLDER
 global CONFIGURATION
@@ -20,7 +21,6 @@ def checkSshKey():
         command = f"-f {LOCAL_SSH_KEY_FOLDER}/id_rsa -t rsa"
         p = subprocess.Popen(["ssh-keygen"] + command.split(' '), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         result, errors = p.communicate()
-        # result = subprocess.run(["ssh-keygen"] + command.split(' '), stdout=subprocess.PIPE)
         print(result)
         return True
 
@@ -99,7 +99,7 @@ def commandManagerNewServer():
         ip = input("Input the new server's IP: ")
         sshPortText = input("Input the new server's SSH port if it's not the default value (22): ")
         username = input("Input the new server's username: ")
-        password = input("Input the password to connect for the first time and add our SSH key: ")
+        password = getpass("Input remote server's password to transfer the SSH key: ")
         if sshPortText == "":
             sshPortText = "22"
         sshPort = int(sshPortText)
@@ -110,6 +110,7 @@ def commandManagerNewServer():
         addMyKeyToServer(server, password)
     except:
         print("Error while adding our SSH key to the new server, please check the credentials.")
+        return
     CONFIGURATION.servers.append(server)
     updateConfigFile()
 
@@ -119,7 +120,8 @@ def addMyKeyToServer(server, password):
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     client.connect(server.ip, port=server.sshPort, 
                    username=server.username, password=password)
-    stdin, stdout, stderr = client.exec_command(f'echo -n \"{mySshKey}\" >> .ssh/authorized_keys')
+    client.exec_command(f'mkdir .ssh')
+    client.exec_command(f'echo -n \"{mySshKey}\" >> .ssh/authorized_keys')
 
 def readLocalSshKey():
     with open(LOCAL_SSH_KEY_FOLDER / "id_rsa.pub", "r") as file:
@@ -127,7 +129,7 @@ def readLocalSshKey():
 
 def printConfigServers():
     if len(CONFIGURATION.servers) == 0:
-        print("Config file has no servers currently.")
+        print("Config file currently has no servers.")
     else:
         for i, server in enumerate(CONFIGURATION.servers):
             print(f"{i+1}: {server}")
