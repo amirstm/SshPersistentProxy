@@ -18,7 +18,7 @@ def checkSshKey():
         return False
     else:
         print("RSA key was not found. We will build a new one.")
-        command = f"-f {LOCAL_SSH_KEY_FOLDER}/id_rsa -t rsa"
+        command = f"-f {LOCAL_SSH_KEY_FOLDER}/id_rsa -t rsa -N "
         p = subprocess.Popen(["ssh-keygen"] + command.split(' '), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         result, errors = p.communicate()
         print(result)
