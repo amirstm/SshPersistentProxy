@@ -15,6 +15,10 @@ def setSshKeyFolder():
         LOCAL_SSH_KEY_FOLDER = Path(CONFIG_FILE_FOLDER) / ".ssh" 
     else:
         LOCAL_SSH_KEY_FOLDER = Path().home() / ".ssh"
+    
+def makeNecessaryDirectories():
+    if not os.path.isdir(CONFIG_FILE_FOLDER):
+        os.mkdir(CONFIG_FILE_FOLDER)
     if not os.path.isdir(LOCAL_SSH_KEY_FOLDER):
         os.mkdir(LOCAL_SSH_KEY_FOLDER)
 
@@ -40,8 +44,6 @@ def checkConfigFile(keyIsNew):
             updateConfigFile()
         print("Configuration file is processed and ready.")
     else:
-        if not os.path.isdir(CONFIG_FILE_FOLDER):
-            os.mkdir(CONFIG_FILE_FOLDER)
         proxyPort = input("Enter port to use for proxy tunneling: ")
         CONFIGURATION = Configuration(proxyPort=proxyPort)
         updateConfigFile()
@@ -66,7 +68,7 @@ def runCommandManager():
             time.sleep(1)
         elif command.isdigit():
             serverInd = int(command) - 1
-            if len(CONFIGURATION.servers) <= serverInd:
+            if len(CONFIGURATION.servers) <= serverInd or serverInd < 0:
                 print("Invalid index was entered. Please try again.")
             else:
                 commandManageOldServer(CONFIGURATION.servers[serverInd])
@@ -77,7 +79,8 @@ def commandManageOldServer(server):
 Please choose from the following commands for the server {server.ip}:
 0. Exit to main menu
 1. Run a test connection
-2. Toggle enabled status from {server.enabled} to {not server.enabled}''')
+2. Toggle enabled status from {server.enabled} to {not server.enabled}
+3. Delete server from list''')
         command = input("Enter the command number: ")
         if command == "0":
             break
@@ -85,12 +88,16 @@ Please choose from the following commands for the server {server.ip}:
             try:
                 runTestConnection(server)
                 print(f"Connection to {server.ip} was successful.")
-            except:
+            except Exception:
                 print(f"Connection to {server.ip} failed.")
             time.sleep(1)
         elif command == "2":
             server.enabled = not server.enabled
             updateConfigFile()
+        elif command == "3":
+            CONFIGURATION.servers.remove(server)
+            updateConfigFile()
+            break
         else:
             print("Invalid command. Please try again.")
             time.sleep(1)
@@ -98,8 +105,8 @@ Please choose from the following commands for the server {server.ip}:
 def runTestConnection(server):
     client = SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(server.ip, port=server.sshPort, 
-                   username=server.username)
+    client.connect(server.ip, port=server.sshPort, username=server.username,
+                   key_filename=str(LOCAL_SSH_KEY_FOLDER / "id_rsa"))
     client.exec_command(f'ls -a')
 
 def commandManagerNewServer():
@@ -126,8 +133,7 @@ def addMyKeyToServer(server, password):
     mySshKey = readLocalSshKey()
     client = SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(server.ip, port=server.sshPort, 
-                   username=server.username, password=password)
+    client.connect(server.ip, port=server.sshPort, username=server.username, password=password)
     client.exec_command(f'mkdir .ssh')
     client.exec_command(f'echo -n \"{mySshKey}\" >> .ssh/authorized_keys')
 
@@ -145,6 +151,7 @@ def printConfigServers():
 if __name__ == "__main__":
     print("Running SshPersistentProxy Admin.")
     setSshKeyFolder()
+    makeNecessaryDirectories()
     keyIsNew = checkSshKey()
     checkConfigFile(keyIsNew)
     runCommandManager()

@@ -8,5 +8,7 @@ COPY python/ .
 
 EXPOSE 5000
 
-CMD ["python", "admin.py"]
-# docker container run --name ssha -it -v $(pwd)/config:/config -v ~/.ssh:/root/.ssh amirstm/sshproxy_admin
+VOLUME /python/config
+
+CMD ["python", "admin.py", "DOCKER"]
+# docker container run --name ssha --rm -it -v sshproxy_config:/python/config  amirstm/sshproxy_admin
