@@ -1,4 +1,4 @@
-import os, subprocess, json, time, paramiko
+import os, subprocess, json, time, paramiko, sys
 from pathlib import Path
 from config import Server, Configuration
 from paramiko import SSHClient
@@ -6,12 +6,17 @@ from getpass import getpass
 
 global LOCAL_SSH_KEY_FOLDER
 global CONFIGURATION
-CONFIG_FILE_FOLDER = "../config/"
+CONFIG_FILE_FOLDER = "config/"
 CONFIG_FILE_NAME = "private_config.json"
 
-def findLocalSshKeyFolder():
+def setSshKeyFolder():
     global LOCAL_SSH_KEY_FOLDER
-    LOCAL_SSH_KEY_FOLDER = Path().home() / ".ssh" 
+    if len(sys.argv) > 1 and sys.argv[1] == "DOCKER":
+        LOCAL_SSH_KEY_FOLDER = Path(CONFIG_FILE_FOLDER) / ".ssh" 
+    else:
+        LOCAL_SSH_KEY_FOLDER = Path().home() / ".ssh"
+    if not os.path.isdir(LOCAL_SSH_KEY_FOLDER):
+        os.mkdir(LOCAL_SSH_KEY_FOLDER)
 
 def checkSshKey():
     if os.path.isfile(LOCAL_SSH_KEY_FOLDER / "id_rsa.pub"):
@@ -139,7 +144,7 @@ def printConfigServers():
 
 if __name__ == "__main__":
     print("Running SshPersistentProxy Admin.")
-    findLocalSshKeyFolder()
+    setSshKeyFolder()
     keyIsNew = checkSshKey()
     checkConfigFile(keyIsNew)
     runCommandManager()
