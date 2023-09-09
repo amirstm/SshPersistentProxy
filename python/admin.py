@@ -40,7 +40,13 @@ def approveConfigFile(keyIsNew):
             GlobalConig.updateConfigFile(CONFIGURATION)
         print("Configuration file is processed and ready.")
     else:
-        proxyPort = input("Enter port to use for proxy tunneling: ")
+        while True:
+            proxyPortStr = input("Enter port to use for proxy tunneling: ")
+            if proxyPortStr.isdigit():
+                proxyPort = int(proxyPortStr)
+                break
+            else:
+                print("Proxy port should be an integer. Please, try again.")
         CONFIGURATION = Configuration(proxyPort=proxyPort)
         GlobalConig.updateConfigFile(CONFIGURATION)
         print("Configuration file is initiated and ready.")
