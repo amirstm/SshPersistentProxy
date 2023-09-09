@@ -7,8 +7,10 @@ from psutil import process_iter
 global LOCAL_SSH_KEY_FOLDER
 global CONFIGURATION
 global SERVERS
+global NEXT_SERVER_INDEX
 CONFIG_FILE_FOLDER = GlobalConig.CONFIG_FILE_FOLDER
 CONFIG_FILE_NAME = GlobalConig.CONFIG_FILE_NAME
+NEXT_SERVER_INDEX = 0
 
 def setSshKeyFolder():
     global LOCAL_SSH_KEY_FOLDER
@@ -24,6 +26,7 @@ def checkSshKey():
 
 def readConfigFile():
     global CONFIGURATION
+    global SERVERS
     if os.path.isfile(CONFIG_FILE_FOLDER + CONFIG_FILE_NAME):
         CONFIGURATION = GlobalConig.readConfigFile()
         SERVERS = [server for server in CONFIGURATION.servers if server.enabled and server.hasMyKey]
@@ -39,12 +42,32 @@ def readConfigFile():
         return False
 
 def proxySwitcher():
-    # sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
-    # sock.connect(('127.0.0.1', CONFIGURATION.proxyPort))
     while True:
-        checkConnection()
+        # checkConnection()
+        killOldProxyProcess()
+        server = getNextServer()
+        initiateNewProxyProcess(server)
         time.sleep(10)
     pass
+
+def getNextServer():
+    global NEXT_SERVER_INDEX
+    global SERVERS
+    server = SERVERS[NEXT_SERVER_INDEX]
+    NEXT_SERVER_INDEX = (NEXT_SERVER_INDEX + 1) % len(SERVERS)
+    return server
+
+def initiateNewProxyProcess(server):
+    try:
+        print("Initiating new proxy...")
+        command = f"{server.username}@{server.ip} -p {server.sshPort} -D {CONFIGURATION.proxyPort} -i {LOCAL_SSH_KEY_FOLDER / 'id_rsa'}"
+        print(command)
+        p = subprocess.Popen(["ssh"] + command.split(' '), stdout=sys.stdout, stderr=sys.stdout, text=True)
+        p.communicate()
+    except:
+        print("Initiating new proxy failed.")
+        print(traceback.format_exc())
+
 
 def checkConnection():
     while True:
@@ -59,15 +82,15 @@ def checkConnection():
         except Exception:
             print("Connection to proxy failed.")
             break
-        closeOldConnection()
         time.sleep(1)
 
-def closeOldConnection():
+def killOldProxyProcess():
     for proc in process_iter():
         try:
             if any([conns for conns in proc.connections(kind='inet') if conns.laddr.port == CONFIGURATION.proxyPort]):
-                print(proc)
-                procFound = proc.terminate()
+                print(f"Obsolete process blocking proxy port was found: {proc}")
+                proc.terminate()
+                print(f"Obsolete process with ID {proc.pid} was killed.")
         except:
             pass
 
@@ -100,6 +123,7 @@ def main():
         return
     if not readConfigFile():
         return
+    # if not CheckProxyPortFree(): # TODO
     proxySwitcher()
 
 if __name__ == "__main__":
