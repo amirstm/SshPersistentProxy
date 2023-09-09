@@ -11,10 +11,8 @@ CONFIG_FILE_NAME = "private_config.json"
 
 def setSshKeyFolder():
     global LOCAL_SSH_KEY_FOLDER
-    if len(sys.argv) > 1 and sys.argv[1] == "DOCKER":
-        LOCAL_SSH_KEY_FOLDER = Path(CONFIG_FILE_FOLDER) / ".ssh" 
-    else:
-        LOCAL_SSH_KEY_FOLDER = Path().home() / ".ssh"
+    LOCAL_SSH_KEY_FOLDER = Path(CONFIG_FILE_FOLDER) / ".ssh" 
+    # LOCAL_SSH_KEY_FOLDER = Path().home() / ".ssh"   # Obsolete
     
 def makeNecessaryDirectories():
     if not os.path.isdir(CONFIG_FILE_FOLDER):
