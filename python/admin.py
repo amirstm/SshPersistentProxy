@@ -1,18 +1,16 @@
 import os, subprocess, json, time, paramiko, sys
-from pathlib import Path
-from config import Server, Configuration
+from config import Server, Configuration, GlobalConig
 from paramiko import SSHClient
 from getpass import getpass
 
 global LOCAL_SSH_KEY_FOLDER
 global CONFIGURATION
-CONFIG_FILE_FOLDER = "config/"
-CONFIG_FILE_NAME = "private_config.json"
+CONFIG_FILE_FOLDER = GlobalConig.CONFIG_FILE_FOLDER
+CONFIG_FILE_NAME = GlobalConig.CONFIG_FILE_NAME
 
 def setSshKeyFolder():
     global LOCAL_SSH_KEY_FOLDER
-    LOCAL_SSH_KEY_FOLDER = Path(CONFIG_FILE_FOLDER) / ".ssh" 
-    # LOCAL_SSH_KEY_FOLDER = Path().home() / ".ssh"   # Obsolete
+    LOCAL_SSH_KEY_FOLDER = GlobalConig.getSshKeyFolder() 
     
 def makeNecessaryDirectories():
     if not os.path.isdir(CONFIG_FILE_FOLDER):
@@ -20,7 +18,7 @@ def makeNecessaryDirectories():
     if not os.path.isdir(LOCAL_SSH_KEY_FOLDER):
         os.mkdir(LOCAL_SSH_KEY_FOLDER)
 
-def checkSshKey():
+def approveSshKey():
     if os.path.isfile(LOCAL_SSH_KEY_FOLDER / "id_rsa.pub"):
         print("RSA key already exists.")
         return False
@@ -32,29 +30,20 @@ def checkSshKey():
         print(result)
         return True
 
-def checkConfigFile(keyIsNew):
+def approveConfigFile(keyIsNew):
     global CONFIGURATION
     if os.path.isfile(CONFIG_FILE_FOLDER + CONFIG_FILE_NAME):
-        readConfigFile()
+        CONFIGURATION = GlobalConig.readConfigFile()
         if keyIsNew or True:
             for server in CONFIGURATION.servers:
                 server.hasMyKey = False
-            updateConfigFile()
+            GlobalConig.updateConfigFile(CONFIGURATION)
         print("Configuration file is processed and ready.")
     else:
         proxyPort = input("Enter port to use for proxy tunneling: ")
         CONFIGURATION = Configuration(proxyPort=proxyPort)
-        updateConfigFile()
+        GlobalConig.updateConfigFile(CONFIGURATION)
         print("Configuration file is initiated and ready.")
-
-def updateConfigFile():
-    with open(CONFIG_FILE_FOLDER + CONFIG_FILE_NAME, "w") as file:
-        file.write(CONFIGURATION.toJSON())
-
-def readConfigFile():
-    global CONFIGURATION
-    with open(CONFIG_FILE_FOLDER + CONFIG_FILE_NAME, "r") as file:
-        CONFIGURATION = Configuration(**json.loads(file.read()))
 
 def runCommandManager():
     while True:
@@ -91,10 +80,10 @@ Please choose from the following commands for the server {server.ip}:
             time.sleep(1)
         elif command == "2":
             server.enabled = not server.enabled
-            updateConfigFile()
+            GlobalConig.updateConfigFile(CONFIGURATION)
         elif command == "3":
             CONFIGURATION.servers.remove(server)
-            updateConfigFile()
+            GlobalConig.updateConfigFile(CONFIGURATION)
             break
         else:
             print("Invalid command. Please try again.")
@@ -125,7 +114,7 @@ def commandManagerNewServer():
         print("Error while adding our SSH key to the new server, please check the credentials.")
         return
     CONFIGURATION.servers.append(server)
-    updateConfigFile()
+    GlobalConig.updateConfigFile(CONFIGURATION)
 
 def addMyKeyToServer(server, password):
     mySshKey = readLocalSshKey()
@@ -150,6 +139,6 @@ if __name__ == "__main__":
     print("Running SshPersistentProxy Admin.")
     setSshKeyFolder()
     makeNecessaryDirectories()
-    keyIsNew = checkSshKey()
-    checkConfigFile(keyIsNew)
+    keyIsNew = approveSshKey()
+    approveConfigFile(keyIsNew)
     runCommandManager()

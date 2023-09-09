@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 class Server:
     def __init__(self, ip, username, hasMyKey, enabled, sshPort=22):
@@ -32,3 +33,20 @@ class Configuration:
             },
             indent=2)
     
+class GlobalConig():
+    CONFIG_FILE_FOLDER = "config/"
+    CONFIG_FILE_NAME = "private_config.json"
+
+    def getSshKeyFolder():
+        return Path(GlobalConig.CONFIG_FILE_FOLDER) / ".ssh"
+        # LOCAL_SSH_KEY_FOLDER = Path().home() / ".ssh"   # Obsolete
+
+    def readConfigFile():
+        with open(GlobalConig.CONFIG_FILE_FOLDER + GlobalConig.CONFIG_FILE_NAME, "r") as file:
+            return Configuration(**json.loads(file.read()))
+        
+    def updateConfigFile(configuration):
+        with open(GlobalConig.CONFIG_FILE_FOLDER + GlobalConig.CONFIG_FILE_NAME, "w") as file:
+            file.write(configuration.toJSON())
+
+
