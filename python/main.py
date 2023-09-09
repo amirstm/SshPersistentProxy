@@ -1,10 +1,11 @@
-import os, subprocess, json, time, paramiko, sys
+import os, subprocess, json, time, paramiko, sys, socket
 from pathlib import Path
 from config import Server, Configuration, GlobalConig
 from paramiko import SSHClient
 
 global LOCAL_SSH_KEY_FOLDER
 global CONFIGURATION
+global SERVERS
 CONFIG_FILE_FOLDER = GlobalConig.CONFIG_FILE_FOLDER
 CONFIG_FILE_NAME = GlobalConig.CONFIG_FILE_NAME
 
@@ -20,23 +21,35 @@ def checkSshKey():
         print("SSH key is not found.")
         return False
 
-def checkConfigFile():
+def readConfigFile():
     global CONFIGURATION
     if os.path.isfile(CONFIG_FILE_FOLDER + CONFIG_FILE_NAME):
         CONFIGURATION = GlobalConig.readConfigFile()
+        SERVERS = [server for server in CONFIGURATION.servers if server.enabled and server.hasMyKey]
         print("Configuration file is processed and ready.")
-        return True
+        if len(SERVERS) > 0:
+            print(f"Available server count: {len(SERVERS)}")
+            return True
+        else:
+            print("No available server was found.")
+            return False
     else:
         print("Configuration file is not found.")
         return False
+
+def proxySwitcher():
+    # sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
+    # sock.connect(('127.0.0.1', CONFIGURATION.proxyPort))
+    pass
 
 def main():
     print("Running SshPersistentProxy Main.")
     setSshKeyFolder()
     if not checkSshKey():
         return
-    if not checkConfigFile():
+    if not readConfigFile():
         return
+    proxySwitcher()
 
 if __name__ == "__main__":
     main()

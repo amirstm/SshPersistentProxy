@@ -34,7 +34,7 @@ def approveConfigFile(keyIsNew):
     global CONFIGURATION
     if os.path.isfile(CONFIG_FILE_FOLDER + CONFIG_FILE_NAME):
         CONFIGURATION = GlobalConig.readConfigFile()
-        if keyIsNew or True:
+        if keyIsNew:
             for server in CONFIGURATION.servers:
                 server.hasMyKey = False
             GlobalConig.updateConfigFile(CONFIGURATION)
