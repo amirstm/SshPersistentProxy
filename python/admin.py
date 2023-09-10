@@ -69,11 +69,13 @@ def runCommandManager():
 def commandManageOldServer(server):
     while True:
         print(f'''
-Please choose from the following commands for the server {server.ip}:
+Please choose from the following commands for the server {server.username}@{server.ip}:
 0. Exit to main menu
 1. Run a test connection
 2. Toggle enabled status from {server.enabled} to {not server.enabled}
 3. Delete server from list''')
+        if not server.hasMyKey:
+            print("4. Add my key to the server")
         command = input("Enter the command number: ")
         if command == "0":
             break
@@ -91,6 +93,12 @@ Please choose from the following commands for the server {server.ip}:
             CONFIGURATION.servers.remove(server)
             GlobalConig.updateConfigFile(CONFIGURATION)
             break
+        elif command == "4" and (not server.hasMyKey):
+            password = getpass("Input remote server's password to transfer the SSH key: ")
+            addMyKeyToServer(server, password)
+            server.hasMyKey = True
+            GlobalConig.updateConfigFile(CONFIGURATION)
+            print("Your key was successfully added to the server.")
         else:
             print("Invalid command. Please try again.")
             time.sleep(1)
@@ -116,6 +124,7 @@ def commandManagerNewServer():
         print("Invalid input, please try again.")
     try:
         addMyKeyToServer(server, password)
+        print("Your key was successfully added to the server.")
     except:
         print("Error while adding our SSH key to the new server, please check the credentials.")
         return
@@ -139,7 +148,7 @@ def printConfigServers():
         print("Config file currently has no servers.")
     else:
         for i, server in enumerate(CONFIGURATION.servers):
-            print(f"{i+1}: {server}")
+            print(f"{i+1}: {server} {'' if server.hasMyKey else '(NO KEY)'}")
 
 if __name__ == "__main__":
     print("Running SshPersistentProxy Admin.")
