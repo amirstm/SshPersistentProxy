@@ -8,5 +8,5 @@ COPY python/ .
 
 VOLUME /python/config
 
-CMD ["python", "admin.py", "DOCKER"]
-# docker container run --name ssha --rm -it -v sshproxy_config:/python/config  amirstm/sshproxy_admin
+CMD ["python", "main.py", "DOCKER"]
+# docker container run --name sshm -d -v sshproxy_config:/python/config -p 37777:37777 amirstm/sshproxy_main
