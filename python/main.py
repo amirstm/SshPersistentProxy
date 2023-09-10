@@ -67,7 +67,6 @@ def initiateNewProxyProcess(server):
         print("Initiating new proxy failed.")
         print(traceback.format_exc())
 
-
 def checkConnection():
     while True:
         try:
