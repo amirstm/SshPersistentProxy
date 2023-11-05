@@ -23,7 +23,7 @@ Follow these steps to use the project without Docker:
    ```bash
    pip install -r requirements.txt
    ```
-3. **Run Configurator**: Execute the configurator script to set up your SSH connections and configurations. Follow the on-screen instructions to add at least one server to the configuration list.
+3. **Run the Configurator**: Execute the configurator script to set up your SSH connections and configurations. Follow the on-screen instructions to add at least one server to the configuration list.
    ```bash
    python admin.py
    ```
@@ -31,3 +31,26 @@ Follow these steps to use the project without Docker:
    ```bash
    python main.py
    ```
+
+Your proxy is now ready and accessible as a socks5 proxy on the specified port.
+
+## Running with Docker
+
+Follow these steps to use the project with Docker:
+
+1. **Run the Configurator**: 
+   - Replace `<VOLUME_NAME>` in the following command with your custom volume name.
+   - Execute the configurator image to set up your SSH connections and configurations. Follow the on-screen instructions to add at least one server to the configuration list.
+ 
+    ```bash
+    docker container run --rm -it -v <VOLUME_NAME>:/python/config  amirstm/sshproxy_admin
+    ```
+2. **Run the Main Image**: 
+   - Replace <VOLUME_NAME> and <PORT> in the following command with the specified volume name and the desired port for the main image.
+   - Start the main Docker image, which establishes and maintains a connection to one of the configured servers, forwarding the specified port as a proxy.
+   
+    ```bash
+    docker container run -v <VOLUME_NAME>:/python/config -p <PORT>:<PORT> amirstm/sshproxy_main
+    ```
+
+Your proxy is now ready and accessible as a socks5 proxy on the specified port.
