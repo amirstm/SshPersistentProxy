@@ -14,8 +14,20 @@ SSH Persistent Proxy is a collection of Python executables and Docker images des
 
 Follow these steps to use the project without Docker:
 
-1. **Clone**: Clone the GitHub repository and change directory to the *python* folder.
-2. **Install Requirements**: Install the required python libraries.
+1. **Clone the Repository**: Begin by cloning the GitHub repository to your local machine. Change your current directory to the `python` folder.
+   ```bash
+   git clone https://github.com/amirstm/SshPersistentProxy.git
+   cd SshPersistentProxy/python
+   ```
+2. **Install Required Libraries**: Use pip to install the necessary Python libraries specified in the requirements.txt file.
    ```bash
    pip install -r requirements.txt
+   ```
+3. **Run Configurator**: Execute the configurator script to set up your SSH connections and configurations. Follow the on-screen instructions to add at least one server to the configuration list.
+   ```bash
+   python admin.py
+   ```
+4. **Start the Main Executable**: Finally, run the main executable to establish and maintain a connection to one of the configured servers, forwarding the specified port for use as a proxy.
+   ```bash
+   python main.py
    ```
