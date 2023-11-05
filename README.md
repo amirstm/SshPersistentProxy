@@ -46,7 +46,7 @@ Follow these steps to use the project with Docker:
     docker container run --rm -it -v <VOLUME_NAME>:/python/config  amirstm/sshproxy_admin
     ```
 2. **Run the Main Image**: 
-   - Replace <VOLUME_NAME> and <PORT> in the following command with the specified volume name and the desired port for the main image.
+   - Replace `<VOLUME_NAME>` and `<PORT>` in the following command with the specified volume name and the desired port for the main image.
    - Start the main Docker image, which establishes and maintains a connection to one of the configured servers, forwarding the specified port as a proxy.
    
     ```bash
