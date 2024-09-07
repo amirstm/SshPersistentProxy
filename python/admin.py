@@ -30,11 +30,11 @@ def approveSshKey():
         print(result)
         return True
 
-def approveConfigFile(keyIsNew):
+def approveConfigFile(key_is_new):
     global CONFIGURATION
     if os.path.isfile(CONFIG_FILE_FOLDER + CONFIG_FILE_NAME):
         CONFIGURATION = GlobalConig.readConfigFile()
-        if keyIsNew:
+        if key_is_new:
             for server in CONFIGURATION.servers:
                 server.hasMyKey = False
             GlobalConig.updateConfigFile(CONFIGURATION)
@@ -154,6 +154,6 @@ if __name__ == "__main__":
     print("Running SshPersistentProxy Admin.")
     setSshKeyFolder()
     makeNecessaryDirectories()
-    keyIsNew = approveSshKey()
-    approveConfigFile(keyIsNew)
+    key_is_new = approveSshKey()
+    approveConfigFile(key_is_new)
     runCommandManager()
