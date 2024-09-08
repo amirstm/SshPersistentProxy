@@ -60,7 +60,7 @@ def getNextServer():
 def initiateNewProxyProcess(server):
     try:
         print("Initiating new proxy...")
-        command = f"{server.username}@{server.ip} -p {server.sshPort} -D {CONFIGURATION.proxyPort} -oStrictHostKeyChecking=no -tt -g -i {LOCAL_SSH_KEY_FOLDER / 'id_rsa'}"
+        command = f"{server.username}@{server.ip} -p {server.sshPort} -D {CONFIGURATION.proxy_port} -oStrictHostKeyChecking=no -tt -g -i {LOCAL_SSH_KEY_FOLDER / 'id_rsa'}"
         p = subprocess.Popen(["ssh"] + command.split(' '), stdout=sys.stdout, stderr=sys.stdout, text=True)
         p.communicate()
     except:
@@ -72,7 +72,7 @@ def checkConnection():
         try:
             print("Connecting new socket to proxy.")
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect(('127.0.0.1', CONFIGURATION.proxyPort))
+            sock.connect(('127.0.0.1', CONFIGURATION.proxy_port))
             print("New socket successfully connected to proxy.")
             tcpConnectionChecker(sock)
             sock.close()
@@ -85,7 +85,7 @@ def checkConnection():
 def killOldProxyProcess():
     for proc in process_iter():
         try:
-            if any([conns for conns in proc.connections(kind='inet') if conns.laddr.port == CONFIGURATION.proxyPort]):
+            if any([conns for conns in proc.connections(kind='inet') if conns.laddr.port == CONFIGURATION.proxy_port]):
                 print(f"Obsolete process blocking proxy port was found: {proc}")
                 proc.terminate()
                 print(f"Obsolete process with ID {proc.pid} was killed.")
@@ -114,10 +114,10 @@ def tcpConnectionChecker(sock):
             break
         time.sleep(1)
 
-def checkProxyPortFreedom():
+def checkproxy_portFreedom():
     for proc in process_iter():
         try:
-            if any([conns for conns in proc.connections(kind='inet') if conns.laddr.port == CONFIGURATION.proxyPort]):
+            if any([conns for conns in proc.connections(kind='inet') if conns.laddr.port == CONFIGURATION.proxy_port]):
                 print(f"Proxy port is already occupied by process: {proc}")
                 return False
         except:
@@ -125,7 +125,7 @@ def checkProxyPortFreedom():
     return True
 
 def initialChecksPass():
-    return checkSshKey() and readConfigFile() and checkProxyPortFreedom()
+    return checkSshKey() and readConfigFile() and checkproxy_portFreedom()
 
 def main():
     print("Running SshPersistentProxy Main.")
