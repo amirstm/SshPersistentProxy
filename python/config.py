@@ -2,18 +2,26 @@ import json
 from pathlib import Path
 
 class Server:
-    def __init__(self, ip, username, hasMyKey, enabled, sshPort=22):
+    def __init__(
+        self,
+        ip,
+        username,
+        enabled,
+        has_my_key=None,
+        ssh_port=22,
+        **legacy_fields,
+    ):
         self.ip = ip
-        self.sshPort = sshPort
+        self.ssh_port = legacy_fields.get("sshPort", ssh_port)
         self.username = username
-        self.hasMyKey = hasMyKey
+        self.has_my_key = legacy_fields.get("hasMyKey", has_my_key)
         self.enabled = enabled
 
-    def toDict(self):
+    def to_dict(self):
         return {
             "ip": self.ip,
-            "sshPort": self.sshPort,
-            "hasMyKey": self.hasMyKey,
+            "ssh_port": self.ssh_port,
+            "has_my_key": self.has_my_key,
             "enabled": self.enabled,
             "username": self.username
         }
@@ -22,31 +30,33 @@ class Server:
         return self.ip
 
 class Configuration:
-    def __init__(self, proxy_port, servers=[]):
+    def __init__(self, proxy_port=None, servers=None, **legacy_fields):
+        proxy_port = legacy_fields.get("proxyPort", proxy_port)
+        servers = servers or []
         self.proxy_port = proxy_port
         self.servers = [Server(**s) for s in servers]
 
-    def toJSON(self):
+    def to_json(self):
         return json.dumps({
             "proxy_port": self.proxy_port,
-            "servers": [s.toDict() for s in self.servers]
+            "servers": [s.to_dict() for s in self.servers]
             },
             indent=2)
     
-class GlobalConig():
+class GlobalConfig:
     CONFIG_FILE_FOLDER = "config/"
     CONFIG_FILE_NAME = "private_config.json"
 
-    def getSshKeyFolder():
-        return Path(GlobalConig.CONFIG_FILE_FOLDER) / ".ssh"
-        # LOCAL_SSH_KEY_FOLDER = Path().home() / ".ssh"   # Obsolete
+    def get_ssh_key_folder():
+        return Path(GlobalConfig.CONFIG_FILE_FOLDER) / ".ssh"
+        # local_ssh_key_folder = Path().home() / ".ssh"   # Obsolete
 
-    def readConfigFile():
-        with open(GlobalConig.CONFIG_FILE_FOLDER + GlobalConig.CONFIG_FILE_NAME, "r") as file:
+    def read_config_file():
+        with open(GlobalConfig.CONFIG_FILE_FOLDER + GlobalConfig.CONFIG_FILE_NAME, "r") as file:
             return Configuration(**json.loads(file.read()))
         
-    def updateConfigFile(configuration):
-        with open(GlobalConig.CONFIG_FILE_FOLDER + GlobalConig.CONFIG_FILE_NAME, "w") as file:
-            file.write(configuration.toJSON())
+    def update_config_file(configuration):
+        with open(GlobalConfig.CONFIG_FILE_FOLDER + GlobalConfig.CONFIG_FILE_NAME, "w") as file:
+            file.write(configuration.to_json())
 
 
