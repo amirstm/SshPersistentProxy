@@ -66,7 +66,7 @@ def initiateNewProxyProcess(server):
             "-p",
             str(server.sshPort),
             "-D",
-            str(CONFIGURATION.proxyPort),
+            str(CONFIGURATION.proxy_port),
             "-oStrictHostKeyChecking=no",
             "-oExitOnForwardFailure=yes",
             "-oServerAliveInterval=30",
@@ -82,13 +82,12 @@ def initiateNewProxyProcess(server):
         print("Initiating new proxy failed.")
         print(traceback.format_exc())
 
-
 def checkConnection():
     while True:
         try:
             print("Connecting new socket to proxy.")
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect(('127.0.0.1', CONFIGURATION.proxyPort))
+            sock.connect(('127.0.0.1', CONFIGURATION.proxy_port))
             print("New socket successfully connected to proxy.")
             tcpConnectionChecker(sock)
             sock.close()
@@ -101,7 +100,7 @@ def checkConnection():
 def killOldProxyProcess():
     for proc in process_iter():
         try:
-            if any([conns for conns in proc.connections(kind='inet') if conns.laddr.port == CONFIGURATION.proxyPort]):
+            if any([conns for conns in proc.connections(kind='inet') if conns.laddr.port == CONFIGURATION.proxy_port]):
                 print(f"Obsolete process blocking proxy port was found: {proc}")
                 proc.terminate()
                 print(f"Obsolete process with ID {proc.pid} was killed.")
@@ -133,7 +132,7 @@ def tcpConnectionChecker(sock):
 def checkProxyPortFreedom():
     for proc in process_iter():
         try:
-            if any([conns for conns in proc.connections(kind='inet') if conns.laddr.port == CONFIGURATION.proxyPort]):
+            if any([conns for conns in proc.connections(kind='inet') if conns.laddr.port == CONFIGURATION.proxy_port]):
                 print(f"Proxy port is already occupied by process: {proc}")
                 return False
         except:

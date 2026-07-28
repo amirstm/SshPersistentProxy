@@ -30,24 +30,24 @@ def approveSshKey():
         print(result)
         return True
 
-def approveConfigFile(keyIsNew):
+def approveConfigFile(key_is_new):
     global CONFIGURATION
     if os.path.isfile(CONFIG_FILE_FOLDER + CONFIG_FILE_NAME):
         CONFIGURATION = GlobalConig.readConfigFile()
-        if keyIsNew:
+        if key_is_new:
             for server in CONFIGURATION.servers:
                 server.hasMyKey = False
             GlobalConig.updateConfigFile(CONFIGURATION)
         print("Configuration file is processed and ready.")
     else:
         while True:
-            proxyPortStr = input("Enter port to use for proxy tunneling: ")
-            if proxyPortStr.isdigit():
-                proxyPort = int(proxyPortStr)
+            proxy_port_str = input("Enter port to use for proxy tunneling: ")
+            if proxy_port_str.isdigit():
+                proxy_port = int(proxy_port_str)
                 break
             else:
                 print("Proxy port should be an integer. Please, try again.")
-        CONFIGURATION = Configuration(proxyPort=proxyPort)
+        CONFIGURATION = Configuration(proxy_port=proxy_port)
         GlobalConig.updateConfigFile(CONFIGURATION)
         print("Configuration file is initiated and ready.")
 
@@ -154,6 +154,6 @@ if __name__ == "__main__":
     print("Running SshPersistentProxy Admin.")
     setSshKeyFolder()
     makeNecessaryDirectories()
-    keyIsNew = approveSshKey()
-    approveConfigFile(keyIsNew)
+    key_is_new = approveSshKey()
+    approveConfigFile(key_is_new)
     runCommandManager()

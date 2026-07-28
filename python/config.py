@@ -22,13 +22,13 @@ class Server:
         return self.ip
 
 class Configuration:
-    def __init__(self, proxyPort, servers=[]):
-        self.proxyPort = proxyPort
+    def __init__(self, proxy_port, servers=[]):
+        self.proxy_port = proxy_port
         self.servers = [Server(**s) for s in servers]
 
     def toJSON(self):
         return json.dumps({
-            "proxyPort": self.proxyPort,
+            "proxy_port": self.proxy_port,
             "servers": [s.toDict() for s in self.servers]
             },
             indent=2)
