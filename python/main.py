@@ -60,8 +60,23 @@ def getNextServer():
 def initiateNewProxyProcess(server):
     try:
         print("Initiating new proxy...")
-        command = f"{server.username}@{server.ip} -p {server.sshPort} -D {CONFIGURATION.proxyPort} -oStrictHostKeyChecking=no -tt -g -i {LOCAL_SSH_KEY_FOLDER / 'id_rsa'}"
-        p = subprocess.Popen(["ssh"] + command.split(' '), stdout=sys.stdout, stderr=sys.stdout, text=True)
+        command = [
+            "ssh",
+            f"{server.username}@{server.ip}",
+            "-p",
+            str(server.sshPort),
+            "-D",
+            str(CONFIGURATION.proxyPort),
+            "-oStrictHostKeyChecking=no",
+            "-oExitOnForwardFailure=yes",
+            "-oServerAliveInterval=30",
+            "-oServerAliveCountMax=2",
+            "-tt",
+            "-g",
+            "-i",
+            str(LOCAL_SSH_KEY_FOLDER / "id_rsa"),
+        ]
+        p = subprocess.Popen(command, stdout=sys.stdout, stderr=sys.stdout, text=True)
         p.communicate()
     except:
         print("Initiating new proxy failed.")
